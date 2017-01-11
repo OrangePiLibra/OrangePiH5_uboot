@@ -10,7 +10,6 @@
 *.axf
 *.map
 *.bin
-*.lds
 #
 # Generated files
 #

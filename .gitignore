@@ -90,3 +90,6 @@ GTAGS
 \#*#
 
 /cur.log
+
+# OrangePi external
+!sunxi_spl/fes_init/main/fes_init.lds
