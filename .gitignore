@@ -93,3 +93,5 @@ GTAGS
 
 # OrangePi external
 !sunxi_spl/fes_init/main/fes_init.lds
+
+include/configs/sun50iw2p1.h
