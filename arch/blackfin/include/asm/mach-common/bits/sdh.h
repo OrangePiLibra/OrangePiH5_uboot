@@ -39,6 +39,7 @@
 #define            CARD_TYPE_SDIO  0
 #define            CARD_TYPE_eMMC  1
 #define              CARD_TYPE_SD  2
+#define            CARD_TYPE_EMMC  0
 #define           CARD_TYPE_CEATA  3
 #endif
 

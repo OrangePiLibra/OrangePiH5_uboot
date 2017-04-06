@@ -11,6 +11,15 @@
 #include "mmc.h"
 #include <private_boot0.h>
 
+#ifndef CARD_TYPE_SD
+#define CARD_TYPE_SD  0x8000001
+#endif
+#ifndef CARD_TYPE_MMC
+#define CARD_TYPE_MMC 0x8000000
+#endif
+
+
+
 /* Set block count limit because of 16 bit register limit on some hardware*/
 #ifndef CONFIG_SYS_MMC_MAX_BLK_COUNT
 #define CONFIG_SYS_MMC_MAX_BLK_COUNT 65535
@@ -287,7 +296,7 @@ int mmc_read_blocks(struct mmc *mmc, void *dst, unsigned long start, unsigned bl
 	struct mmc_cmd cmd;
 	struct mmc_data data;
 	int timeout = 1000;
-
+	
 	if (blkcnt > 1)
 		cmd.cmdidx = MMC_CMD_READ_MULTIPLE_BLOCK;
 	else
@@ -305,6 +314,13 @@ int mmc_read_blocks(struct mmc *mmc, void *dst, unsigned long start, unsigned bl
 	data.blocks = blkcnt;
 	data.blocksize = mmc->read_bl_len;
 	data.flags = MMC_DATA_READ;
+	printf("[MMC] BLCOK ARG:cmd.cmdidx %d \n", (int)(unsigned long)cmd.cmdidx);
+	printf("[MMC] BLCOK ARG:cmd.resp_type %d\n", (int)(unsigned long)cmd.resp_type);
+	printf("[MMC] BLCOK ARG:cmd.flags %d \n", (int)(unsigned long)cmd.flags);
+	printf("[MMC] BLCOK ARG:data.block %d \n", (int)(unsigned long)data.blocks);
+	printf("[MMC] BLCOK ARG:data.blocksize %d \n", (int)(unsigned long)data.blocksize);
+	printf("[MMC] BLCOK ARG:data.flags %d \n", (int)(unsigned long)data.flags);
+	printf("[MMC] BLCOK ARG:cmd.cmdarg %d\n", (int)(unsigned long)cmd.cmdarg);
 
 	if (mmc_send_cmd(mmc, &cmd, &data)){
 		mmcinfo("mmc %d  read blcok failed\n",mmc->control_num);
@@ -316,6 +332,14 @@ int mmc_read_blocks(struct mmc *mmc, void *dst, unsigned long start, unsigned bl
 		cmd.cmdarg = 0;
 		cmd.resp_type = MMC_RSP_R1b;
 		cmd.flags = 0;
+		printf("[BUDDY2] nectblck net\n");
+		printf("[MMC2] BLCOK ARG:cmd.cmdidx %d \n", (int)(unsigned long)cmd.cmdidx);
+		printf("[MMC2] BLCOK ARG:cmd.resp_type %d\n", (int)(unsigned long)cmd.resp_type);
+		printf("[MMC2] BLCOK ARG:cmd.flags %d \n", (int)(unsigned long)cmd.flags);
+		printf("[MMC2] BLCOK ARG:data.block %d \n", (int)(unsigned long)data.blocks);
+		printf("[MMC2] BLCOK ARG:data.blocksize %d \n", (int)(unsigned long)data.blocksize);
+		printf("[MMC2] BLCOK ARG:data.flags %d \n", (int)(unsigned long)data.flags);
+		printf("[MMC2] BLCOK ARG:cmd.cmdarg %d\n", (int)(unsigned long)cmd.cmdarg);
 		if (mmc_send_cmd(mmc, &cmd, NULL)) {
 			mmcinfo("mmc %d fail to send stop cmd\n",mmc->control_num);
 			return 0;
@@ -1338,8 +1362,27 @@ int mmc_send_if_cond(struct mmc *mmc)
 int mmc_init(struct mmc *mmc)
 {
 	int err;
+	int _i;
 	struct boot_sdmmc_private_info_t *priv_info =
 		(struct boot_sdmmc_private_info_t *)(mmc_config_addr + SDMMC_PRIV_INFO_ADDR_OFFSET);
+
+	if (priv_info->card_type == 0) {
+		priv_info->boot_mmc_cfg.boot0_para =0;
+    	priv_info->boot_mmc_cfg.boot_odly_50M = 255;
+    	priv_info->boot_mmc_cfg.boot_sdly_50M = 255;
+    	priv_info->boot_mmc_cfg.boot_odly_50M_ddr = 255;
+    	priv_info->boot_mmc_cfg.boot_sdly_50M_ddr = 255;
+    	priv_info->boot_mmc_cfg.boot_hs_f_max = 0;
+    	priv_info->boot_mmc_cfg.res[0] = 0;
+    	priv_info->boot_mmc_cfg.res[1] = 0;
+
+    	for ( _i = 0; _i < 12; _i++)
+        	priv_info->tune_sdly.tm4_smx_fx[_i] = 0xFFFFFFFF;
+		priv_info->tune_sdly.tm4_smx_fx[2] = 0xff20ffff;
+		priv_info->tune_sdly.tm4_smx_fx[4] = 0xff131fff;
+
+    	priv_info->card_type = 0x8000000;
+	}
 
 	if (mmc->has_init){
 		mmcinfo("mmc %d Has init\n",mmc->control_num);
@@ -1365,29 +1408,9 @@ int mmc_init(struct mmc *mmc)
 	/* The internal partition reset to user partition(0) at every CMD0*/
 	mmc->part_num = 0;
 
-#if 0
-	mmcinfo("***Try SD card %d***\n",mmc->control_num);
-	/* Test for SD version 2 */
-	err = mmc_send_if_cond(mmc);
-
-	/* Now try to get the SD card's operating condition */
-	err = sd_send_op_cond(mmc);
-
-	/* If the command timed out, we check for an MMC card */
-	if(err){
-		mmcinfo("***Try MMC card %d***\n",mmc->control_num);
-		err = mmc_send_op_cond(mmc);
-
-		if (err) {
-			mmcinfo("mmc %d Card did not respond to voltage select!\n",mmc->control_num);
-			mmcinfo("***SD/MMC %d init error!!!***\n",mmc->control_num);
-			return UNUSABLE_ERR;
-		}
-	}
-#else
 	if (priv_info->card_type == CARD_TYPE_SD)
 	{
-		mmcinfo("***Try SD card %d***\n",mmc->control_num);
+		mmcinfo("***[0]Try SD card %d***\n",mmc->control_num);
 		/* Test for SD version 2 */
 		err = mmc_send_if_cond(mmc);
 
@@ -1403,7 +1426,7 @@ int mmc_init(struct mmc *mmc)
 	else if (priv_info->card_type == CARD_TYPE_MMC)
 	{
 		/* If the command timed out, we check for an MMC card */
-		mmcinfo("***Try MMC card %d***\n",mmc->control_num);
+		mmcinfo("***[1]Try MMC card %d***\n",mmc->control_num);
 		err = mmc_send_op_cond(mmc);
 
 		if (err) {
@@ -1416,7 +1439,7 @@ int mmc_init(struct mmc *mmc)
 	{
 		mmcinfo("Wrong media type 0x%x\n", priv_info->card_type);
 
-		mmcinfo("***Try SD card %d***\n",mmc->control_num);
+		mmcinfo("***[2]Try SD card %d***\n",mmc->control_num);
 		/* Test for SD version 2 */
 		err = mmc_send_if_cond(mmc);
 
@@ -1425,7 +1448,7 @@ int mmc_init(struct mmc *mmc)
 
 		/* If the command timed out, we check for an MMC card */
 		if(err){
-			mmcinfo("***Try MMC card %d***\n",mmc->control_num);
+			mmcinfo("***[3]Try MMC card %d***\n",mmc->control_num);
 			err = mmc_send_op_cond(mmc);
 
 			if (err) {
@@ -1435,7 +1458,7 @@ int mmc_init(struct mmc *mmc)
 			}
 		}
 	}
-#endif
+
 	err = mmc_startup(mmc);
 	if (err){
 		mmcinfo("***SD/MMC %d init error!!!***\n",mmc->control_num);
@@ -1455,7 +1478,7 @@ int mmc_register(int dev_num, struct mmc *mmc)
 
 	if (!mmc->b_max)
 		mmc->b_max = CONFIG_SYS_MMC_MAX_BLK_COUNT;
-
+	
 	return mmc_init(mmc);
 }
 

@@ -23,7 +23,7 @@
 #define MAX_MMC_NUM			4   
 
 #define MMC_TRANS_BY_DMA
-//#define MMC_DEBUG
+#define MMC_DEBUG
 #define MMC_REG_FIFO_OS		(0x200)
 
 #define MMC_REG_BASE		SUNXI_MMC0_BASE
