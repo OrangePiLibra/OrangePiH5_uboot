@@ -170,7 +170,6 @@ __ERROR_EXIT:
 
 int load_boot1(void)
 {
-    printf("Load EMMC\n");
 	memcpy((void *)DRAM_PARA_STORE_ADDR, (void *)BT0_head.prvt_head.dram_para, 
 		SUNXI_DRAM_PARA_MAX * 4);
 

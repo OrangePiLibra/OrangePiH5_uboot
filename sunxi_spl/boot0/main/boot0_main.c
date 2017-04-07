@@ -90,7 +90,7 @@ void main( void )
 	timer_init();
 	sunxi_serial_init( BT0_head.prvt_head.uart_port, (void *)BT0_head.prvt_head.uart_ctrl, 6 );
 	set_debugmode_flag();
-    printf("HELLO! BOOT0 is starting!\n");
+	printf("HELLO! BOOT0 is starting!\n");
 	printf("boot0 commit : %s \n",boot0_hash_value);
 	print_version();
 #ifdef	SUNXI_OTA_TEST

@@ -99,7 +99,6 @@ static int mmc_resource_init(int sdc_no)
 {
 	struct sunxi_mmc_host* mmchost = &mmc_host[sdc_no];
 
-    printf("Init mmc %d resource\n", sdc_no);
 	mmcdbg("init mmc %d resource\n", sdc_no);
 	mmchost->reg = (struct sunxi_mmc *)(MMC_REG_BASE + sdc_no * 0x1000);
 	mmchost->database = (u32)mmchost->reg + MMC_REG_FIFO_OS;
@@ -843,7 +842,7 @@ static int mmc_core_init(struct mmc *mmc)
 {
 	struct sunxi_mmc_host* mmchost = (struct sunxi_mmc_host *)mmc->priv;
 	u32 rval = 0;
-
+	
 	/* Reset controller */
 	writel(0x7, &mmchost->reg->gctrl);
 	while(readl(&mmchost->reg->gctrl)&0x7);
@@ -867,7 +866,7 @@ static int mmc_core_init(struct mmc *mmc)
 	__msdelay(1);
 	writel(1, &mmchost->reg->hwrst);
 	__msdelay(1);
-
+	
 	if (mmc->control_num == 0) {
 		/* enable 2xclk mode, and use default input phase */
 		rval = readl(&mmchost->reg->ntsr);
@@ -1269,7 +1268,6 @@ int sunxi_mmc_init(int sdc_no, unsigned bus_width, const normal_gpio_cfg *gpio_i
 	else if (sdc_no == 2)
 		mmc_host[sdc_no].timing_mode = SUNXI_MMC_TIMING_MODE_4;
 
-  
 	strcpy(mmc->name, "SUNXI SD/MMC");
 	mmc->priv = &mmc_host[sdc_no];
 	mmc->send_cmd = mmc_send_cmd;
@@ -1299,7 +1297,6 @@ int sunxi_mmc_init(int sdc_no, unsigned bus_width, const normal_gpio_cfg *gpio_i
 	}
 
 	mmc_clk_io_onoff(sdc_no, 1, gpio_info, offset);
-	
 	ret = mmc_register(sdc_no, mmc);
 	if (ret < 0){
 		mmcinfo("mmc %d register failed\n",sdc_no);

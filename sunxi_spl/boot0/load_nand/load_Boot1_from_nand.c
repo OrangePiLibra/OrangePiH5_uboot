@@ -150,7 +150,6 @@ int load_toc1_from_nand( void )
 
 int load_boot1(void)
 {
-    printf("Load NAND\n");
 	memcpy((void *)DRAM_PARA_STORE_ADDR, (void *)BT0_head.prvt_head.dram_para,
 		SUNXI_DRAM_PARA_MAX * 4);
 	return load_toc1_from_nand();
